@@ -20,27 +20,54 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Create users
+        // Seed roles and permissions first
+        $this->call(RoleSeeder::class);
+
+        // Create users with roles
         $adminUser = User::factory()->create([
             'name' => 'Admin User',
             'email' => 'admin@example.com',
+            'password' => bcrypt('password'),
         ]);
+        $adminUser->assignRole('Admin');
 
-        $technicianUser = User::factory()->create([
-            'name' => 'Technician User',
-            'email' => 'tech@example.com',
+        $staffUser1 = User::factory()->create([
+            'name' => 'Staff User One',
+            'email' => 'staff1@example.com',
+            'password' => bcrypt('password'),
         ]);
+        $staffUser1->assignRole('Staff');
 
-        $users = User::factory(3)->create();
-        $allUsers = collect([$adminUser, $technicianUser])->merge($users);
+        $staffUser2 = User::factory()->create([
+            'name' => 'Staff User Two',
+            'email' => 'staff2@example.com',
+            'password' => bcrypt('password'),
+        ]);
+        $staffUser2->assignRole('Staff');
 
-        // Create customers
-        $customers = Customer::factory(20)->create();
+        $supportUser1 = User::factory()->create([
+            'name' => 'Support User One',
+            'email' => 'support1@example.com',
+            'password' => bcrypt('password'),
+        ]);
+        $supportUser1->assignRole('Support');
 
-        // Create work orders with relationships
+        $supportUser2 = User::factory()->create([
+            'name' => 'Support User Two',
+            'email' => 'support2@example.com',
+            'password' => bcrypt('password'),
+        ]);
+        $supportUser2->assignRole('Support');
+
+        $allUsers = collect([$adminUser, $staffUser1, $staffUser2, $supportUser1, $supportUser2]);
+
+        // Create customers (50 for better testing)
+        $customers = Customer::factory(50)->create();
+
+        // Create work orders with relationships (200+ work orders)
         $customers->each(function ($customer) use ($allUsers) {
-            // Each customer gets 1-3 work orders
-            $workOrderCount = rand(1, 3);
+            // Each customer gets 3-5 work orders
+            $workOrderCount = rand(3, 5);
 
             for ($i = 0; $i < $workOrderCount; $i++) {
                 $workOrder = WorkOrder::factory()->create([
@@ -49,7 +76,7 @@ class DatabaseSeeder extends Seeder
                 ]);
 
                 // Add status history for the work order
-                StatusHistory::factory()->create([
+                StatusHistory::create([
                     'work_order_id' => $workOrder->id,
                     'from_status' => null,
                     'to_status' => 'new',
@@ -59,7 +86,7 @@ class DatabaseSeeder extends Seeder
 
                 // If status is not 'new', add another status history entry
                 if ($workOrder->status !== 'new') {
-                    StatusHistory::factory()->create([
+                    StatusHistory::create([
                         'work_order_id' => $workOrder->id,
                         'from_status' => 'new',
                         'to_status' => $workOrder->status,
@@ -68,12 +95,16 @@ class DatabaseSeeder extends Seeder
                     ]);
                 }
 
-                // Add 0-3 notes per work order
-                $noteCount = rand(0, 3);
-                WorkOrderNote::factory($noteCount)->create([
-                    'work_order_id' => $workOrder->id,
-                    'user_id' => $allUsers->random()->id,
-                ]);
+                // Add 1-4 notes per work order
+                $noteCount = rand(1, 4);
+                for ($j = 0; $j < $noteCount; $j++) {
+                    WorkOrderNote::create([
+                        'work_order_id' => $workOrder->id,
+                        'user_id' => $allUsers->random()->id,
+                        'note' => fake()->paragraph(),
+                        'created_at' => $workOrder->created_at->addHours(rand(1, 48)),
+                    ]);
+                }
 
                 // Add 0-2 notification logs per work order
                 $notificationCount = rand(0, 2);

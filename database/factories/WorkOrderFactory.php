@@ -41,9 +41,9 @@ class WorkOrderFactory extends Factory
     }
 
     /**
-     * Indicate that the work order is new.
+     * Indicate that the work order is new status.
      */
-    public function new($attributes = []): static
+    public function newStatus(): static
     {
         return $this->state(fn(array $attributes) => [
             'status' => 'new',
