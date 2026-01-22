@@ -19,6 +19,7 @@ class WorkOrderNote extends Model
         'work_order_id',
         'user_id',
         'note',
+        'created_at',
     ];
 
     /**
