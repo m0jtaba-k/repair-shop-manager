@@ -98,7 +98,14 @@ class WorkOrderController extends Controller
     {
         $this->authorize('view', $workOrder);
 
-        $workOrder->load(['customer', 'creator', 'notes.user']);
+        $workOrder->load([
+            'customer',
+            'creator',
+            'notes' => function ($query) {
+                $query->with('user')->latest()->limit(5);
+            }
+            //before optimization: $workOrder->load(['customer', 'creator', 'notes.user']);
+        ]);
 
         return new WorkOrderResource($workOrder);
     }
