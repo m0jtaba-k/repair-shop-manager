@@ -57,15 +57,6 @@ class WorkOrderService
                 'changed_at' => now(),
             ]);
 
-            // Debug logging
-            \Log::info('Status change', [
-                'work_order_id' => $workOrder->id,
-                'old_status' => $oldStatus,
-                'new_status' => $newStatus,
-                'new_status_type' => gettype($newStatus),
-                'comparison' => $newStatus === 'waiting_customer' ? 'MATCH' : 'NO MATCH'
-            ]);
-
             // Dispatch queued notification job when status becomes 'waiting_customer'
             if ($newStatus === 'waiting_customer') {
                 SendStatusNotificationJob::dispatch($workOrder, $oldStatus, $newStatus);
