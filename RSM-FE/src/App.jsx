@@ -5,6 +5,7 @@ import WorkOrdersListPage from './pages/WorkOrdersListPage';
 import WorkOrderCreatePage from './pages/WorkOrderCreatePage';
 import WorkOrderDetailPage from './pages/WorkOrderDetailPage';
 import CustomersListPage from './pages/CustomersListPage';
+import CustomerCreatePage from './pages/CustomerCreatePage';
 import CustomerDetailPage from './pages/CustomerDetailPage';
 import CsvImportPage from './pages/CsvImportPage';
 import Layout from './components/Layout';
@@ -59,6 +60,14 @@ function App() {
           element={
             <ProtectedRoute>
               <CustomersListPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/customers/create"
+          element={
+            <ProtectedRoute>
+              <CustomerCreatePage />
             </ProtectedRoute>
           }
         />

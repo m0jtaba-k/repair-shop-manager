@@ -2,6 +2,7 @@ import { useState, memo } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
+import { useAuth } from '../contexts/AuthContext';
 
 // Memoized table component that only re-renders when data changes
 const CustomersTable = memo(function CustomersTable({ data, isLoading, onPageChange }) {
@@ -62,9 +63,11 @@ const CustomersTable = memo(function CustomersTable({ data, isLoading, onPageCha
 });
 
 export default function CustomersListPage() {
+  const navigate = useNavigate();
+  const { hasRole } = useAuth();
+  
   const [page, setPage] = useState(1);
   const [search, setSearch] = useState('');
-  const [tempSearch, setTempSearch] = useState('');
 
   const { data, isLoading } = useQuery({
     queryKey: ['customers', page, search],
@@ -80,25 +83,14 @@ export default function CustomersListPage() {
     },
   });
 
-  const handleSearch = () => {
-    console.log('handleSearch called');
-    console.log('tempSearch:', tempSearch);
-    console.log('current search state:', search);
-    setSearch(tempSearch);
+  const handleSearchChange = (e) => {
+    setSearch(e.target.value);
     setPage(1);
-    console.log('after setState');
   };
 
   const clearSearch = () => {
-    setTempSearch('');
     setSearch('');
     setPage(1);
-  };
-
-  const handleKeyPress = (e) => {
-    if (e.key === 'Enter') {
-      handleSearch();
-    }
   };
 
   const handlePageChange = (newPage) => {
@@ -107,31 +99,39 @@ export default function CustomersListPage() {
 
   return (
     <div className="p-8">
-      <h1 className="text-3xl font-bold mb-6">Customers</h1>
-
-      <div className="mb-6 flex gap-2">
-        <input
-          type="text"
-          className="flex-1 max-w-md border rounded px-4 py-2"
-          placeholder="Search customers by name, phone, or email..."
-          value={tempSearch}
-          onChange={(e) => setTempSearch(e.target.value)}
-          onKeyPress={handleKeyPress}
-        />
-        <button
-          onClick={handleSearch}
-          className="px-6 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
-        >
-          Search
-        </button>
-        {search && (
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Customers</h1>
+        {hasRole('Admin') && (
           <button
-            onClick={clearSearch}
-            className="px-4 py-2 border border-gray-300 rounded hover:bg-gray-50"
+            onClick={() => navigate('/customers/create')}
+            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
           >
-            Clear
+            <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+            </svg>
+            New Customer
           </button>
         )}
+      </div>
+
+      <div className="mb-6">
+        <div className="relative max-w-md">
+          <input
+            type="text"
+            className="w-full border rounded px-4 py-2 pr-10"
+            placeholder="Search customers by name, phone, or email..."
+            value={search}
+            onChange={handleSearchChange}
+          />
+          {search && (
+            <button
+              onClick={clearSearch}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+            >
+              ×
+            </button>
+          )}
+        </div>
       </div>
 
       {/* Table - only this component re-renders when search/page changes */}

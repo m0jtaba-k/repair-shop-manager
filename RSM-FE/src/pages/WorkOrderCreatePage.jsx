@@ -1,7 +1,8 @@
 import { useState } from 'react';
-import { useMutation, useQuery } from '@tanstack/react-query';
+import { useMutation } from '@tanstack/react-query';
 import { useNavigate } from 'react-router-dom';
 import api from '../lib/api';
+import CustomerNameAutocomplete from '../components/CustomerNameAutocomplete';
 
 export default function WorkOrderCreatePage() {
   const navigate = useNavigate();
@@ -13,18 +14,7 @@ export default function WorkOrderCreatePage() {
     customer_id: '',
     due_at: '',
   });
-  const [customerSearch, setCustomerSearch] = useState('');
-  const [showCustomerDropdown, setShowCustomerDropdown] = useState(false);
-
-  const { data: customers } = useQuery({
-    queryKey: ['customer-search', customerSearch],
-    queryFn: async () => {
-      if (!customerSearch || customerSearch.length < 2) return { data: [] };
-      const response = await api.get(`/customers?search=${encodeURIComponent(customerSearch)}`);
-      return response.data;
-    },
-    enabled: customerSearch.length >= 2,
-  });
+  const [selectedCustomer, setSelectedCustomer] = useState(null);
 
   const createWorkOrderMutation = useMutation({
     mutationFn: async (data) => {
@@ -45,15 +35,9 @@ export default function WorkOrderCreatePage() {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  const handleCustomerSearch = (e) => {
-    setCustomerSearch(e.target.value);
-    setShowCustomerDropdown(true);
-  };
-
-  const handleSelectCustomer = (customer) => {
-    setFormData((prev) => ({ ...prev, customer_id: customer.id }));
-    setCustomerSearch(customer.name);
-    setShowCustomerDropdown(false);
+  const handleCustomerSelect = (customer) => {
+    setSelectedCustomer(customer);
+    setFormData((prev) => ({ ...prev, customer_id: customer?.id || '' }));
   };
 
   const handleSubmit = (e) => {
@@ -71,8 +55,6 @@ export default function WorkOrderCreatePage() {
 
     createWorkOrderMutation.mutate(formData);
   };
-
-  const selectedCustomer = customers?.data?.find((c) => c.id === formData.customer_id);
 
   return (
     <div className="p-8 max-w-4xl mx-auto">
@@ -111,36 +93,14 @@ export default function WorkOrderCreatePage() {
         </div>
 
         {/* Customer Search */}
-        <div className="relative">
+        <div>
           <label className="block text-sm font-medium mb-2">
             Customer <span className="text-red-500">*</span>
           </label>
-          <input
-            type="text"
-            value={customerSearch}
-            onChange={handleCustomerSearch}
-            onFocus={() => customerSearch.length >= 2 && setShowCustomerDropdown(true)}
-            className="w-full border rounded px-3 py-2"
-            placeholder="Search customer by name, phone, or email..."
-            required
+          <CustomerNameAutocomplete
+            value={selectedCustomer?.name || ''}
+            onSelect={handleCustomerSelect}
           />
-          
-          {showCustomerDropdown && customers?.data && customers.data.length > 0 && (
-            <div className="absolute z-10 w-full mt-1 bg-white border rounded-md shadow-lg max-h-60 overflow-auto">
-              {customers.data.map((customer) => (
-                <div
-                  key={customer.id}
-                  className="px-3 py-2 hover:bg-gray-100 cursor-pointer"
-                  onClick={() => handleSelectCustomer(customer)}
-                >
-                  <div className="font-medium">{customer.name}</div>
-                  <div className="text-xs text-gray-500">
-                    {customer.phone} {customer.email && `• ${customer.email}`}
-                  </div>
-                </div>
-              ))}
-            </div>
-          )}
           
           {selectedCustomer && (
             <div className="mt-2 p-3 bg-blue-50 rounded border border-blue-200">

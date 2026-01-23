@@ -98,7 +98,7 @@ npm install
 
 # Copy environment file (if needed)
 # Create .env file if you need custom API URL
-echo "VITE_API_URL=http://localhost:8000" > .env
+echo "VITE_API_URL=http://localhost:8000"/api > .env
 ```
 
 ---
