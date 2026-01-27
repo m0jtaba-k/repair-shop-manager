@@ -3,9 +3,11 @@ import { useAuth } from './contexts/AuthContext';
 import LoginPage from './pages/LoginPage';
 import WorkOrdersListPage from './pages/WorkOrdersListPage';
 import WorkOrderCreatePage from './pages/WorkOrderCreatePage';
+import WorkOrderEditPage from './pages/WorkOrderEditPage';
 import WorkOrderDetailPage from './pages/WorkOrderDetailPage';
 import CustomersListPage from './pages/CustomersListPage';
 import CustomerCreatePage from './pages/CustomerCreatePage';
+import CustomerEditPage from './pages/CustomerEditPage';
 import CustomerDetailPage from './pages/CustomerDetailPage';
 import CsvImportPage from './pages/CsvImportPage';
 import Layout from './components/Layout';
@@ -48,6 +50,14 @@ function App() {
           }
         />
         <Route
+          path="/work-orders/:id/edit"
+          element={
+            <ProtectedRoute>
+              <WorkOrderEditPage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
           path="/work-orders/:id"
           element={
             <ProtectedRoute>
@@ -68,6 +78,14 @@ function App() {
           element={
             <ProtectedRoute>
               <CustomerCreatePage />
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/customers/:id/edit"
+          element={
+            <ProtectedRoute>
+              <CustomerEditPage />
             </ProtectedRoute>
           }
         />

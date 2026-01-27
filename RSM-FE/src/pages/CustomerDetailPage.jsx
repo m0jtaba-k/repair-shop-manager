@@ -1,12 +1,15 @@
-import { useQuery } from '@tanstack/react-query';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useParams, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import StatusBadge from '../components/StatusBadge';
 import PriorityBadge from '../components/PriorityBadge';
+import { useAuth } from '../contexts/AuthContext';
 
 export default function CustomerDetailPage() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const { hasRole } = useAuth();
+  const queryClient = useQueryClient();
 
   const { data: customer, isLoading } = useQuery({
     queryKey: ['customer', id],
@@ -16,11 +19,49 @@ export default function CustomerDetailPage() {
     },
   });
 
+  const deleteCustomerMutation = useMutation({
+    mutationFn: async () => {
+      await api.delete(`/customers/${id}`);
+    },
+    onSuccess: () => {
+      alert('Customer deleted successfully');
+      navigate('/customers');
+    },
+    onError: (error) => {
+      alert(error.response?.data?.message || 'Failed to delete customer');
+    },
+  });
+
+  const handleDelete = () => {
+    if (confirm('Are you sure you want to delete this customer? This action cannot be undone.')) {
+      deleteCustomerMutation.mutate();
+    }
+  };
+
   if (isLoading) return <div className="p-8">Loading...</div>;
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Customer Details</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Customer Details</h1>
+        {hasRole('Admin') && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => navigate(`/customers/${id}/edit`)}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Edit
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={deleteCustomerMutation.isPending}
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+            >
+              {deleteCustomerMutation.isPending ? 'Deleting...' : 'Delete'}
+            </button>
+          </div>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-1">

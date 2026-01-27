@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { useParams } from 'react-router-dom';
+import { useParams, useNavigate } from 'react-router-dom';
 import api from '../lib/api';
 import { useAuth } from '../contexts/AuthContext';
 import StatusBadge from '../components/StatusBadge';
@@ -8,7 +8,8 @@ import PriorityBadge from '../components/PriorityBadge';
 
 export default function WorkOrderDetailPage() {
   const { id } = useParams();
-  const { user, hasPermission } = useAuth();
+  const navigate = useNavigate();
+  const { user, hasPermission, hasRole } = useAuth();
   const queryClient = useQueryClient();
   const [note, setNote] = useState('');
   const [newStatus, setNewStatus] = useState('');
@@ -56,6 +57,19 @@ export default function WorkOrderDetailPage() {
     },
   });
 
+  const deleteWorkOrderMutation = useMutation({
+    mutationFn: async () => {
+      await api.delete(`/work-orders/${id}`);
+    },
+    onSuccess: () => {
+      alert('Work order deleted successfully');
+      navigate('/work-orders');
+    },
+    onError: (error) => {
+      alert(error.response?.data?.message || 'Failed to delete work order');
+    },
+  });
+
   const handleAddNote = (e) => {
     e.preventDefault();
     if (note.trim()) {
@@ -90,11 +104,36 @@ export default function WorkOrderDetailPage() {
     return allStatuses;
   };
 
+  const handleDelete = () => {
+    if (confirm('Are you sure you want to delete this work order? This action cannot be undone.')) {
+      deleteWorkOrderMutation.mutate();
+    }
+  };
+
   if (isLoading) return <div className="p-8">Loading...</div>;
 
   return (
     <div className="p-8 max-w-6xl mx-auto">
-      <h1 className="text-3xl font-bold mb-6">Work Order #{workOrder.id}</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="text-3xl font-bold">Work Order #{workOrder.id}</h1>
+        {hasRole('Admin') && (
+          <div className="flex gap-2">
+            <button
+              onClick={() => navigate(`/work-orders/${id}/edit`)}
+              className="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+            >
+              Edit
+            </button>
+            <button
+              onClick={handleDelete}
+              disabled={deleteWorkOrderMutation.isPending}
+              className="px-4 py-2 bg-red-600 text-white rounded hover:bg-red-700 disabled:opacity-50"
+            >
+              {deleteWorkOrderMutation.isPending ? 'Deleting...' : 'Delete'}
+            </button>
+          </div>
+        )}
+      </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         <div className="lg:col-span-2 space-y-6">
